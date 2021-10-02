@@ -39,7 +39,19 @@ class TaxiAgent:
         Implement On policy TD learning or SARSA
         YOUR CODE HERE
         """
-        raise NotImplementedError
+        _old_q_vals = self.getQValue(state, action)
+        _reward = self.alpha * reward
+
+        # update q vals w.r.t. old q vals and reward
+        self.q[(state, action)] = (1 - self.alpha) * _old_q_vals + _reward
+
+        # check if next state exists for the given state and action
+        # if next state exists then add it's val too to q_val
+        if next_state:
+            _action = self.select_action(n_episode)
+            self.q[(
+                state, action
+            )] += self.alpha * self.discount * self.getQValue(next_state, _action)
         
     def off_policy_td_q_learning(self, state, action, reward, next_state):
         """
@@ -47,4 +59,7 @@ class TaxiAgent:
         YOUR CODE HERE
         """
         raise NotImplementedError
+    
+    def getQValue(self, state, action):
+        return self.q[state, action]
         
