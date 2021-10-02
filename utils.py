@@ -3,6 +3,7 @@ author:Sanidhya Mangal
 github:sanidhyamangal
 """
 
+
 class Counter(dict):
     """
     A counter keeps track of counts for a set of keys.
@@ -43,7 +44,6 @@ class Counter(dict):
     subtracted or multiplied together.  See below for details.  They can
     also be normalized and their total count and arg max can be extracted.
     """
-
     def __getitem__(self, idx):
         self.setdefault(idx, 0)
         return dict.__getitem__(self, idx)
@@ -87,7 +87,9 @@ class Counter(dict):
         """
         sortedItems = list(self.items())
 
-        def compare(x, y): return sign(y[1] - x[1])
+        def compare(x, y):
+            return sign(y[1] - x[1])
+
         sortedItems.sort(cmp=compare)
         return [x[0] for x in sortedItems]
 
