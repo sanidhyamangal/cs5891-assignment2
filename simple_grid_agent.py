@@ -32,7 +32,13 @@ class GridworldAgent:
         understand how to calculate return.
         YOUR CODE HERE
         """
-        raise NotImplementedError
+        _rewards = 0
+
+        for _result in episode:
+            _rewards += _result[2]
+        
+        return _rewards / len(episode)
+
     
     def get_q(self, start_state, first_action, epsilon=0.):
         episode = self.run_episode(start_state,epsilon,first_action)
@@ -42,7 +48,7 @@ class GridworldAgent:
         understand how to calculate return.
         YOUR CODE HERE
         """
-        raise NotImplementedError
+        return self.q(start_state, first_action)
     
     def select_action(self,state,epsilon):
         best_action = self.policy[state]
