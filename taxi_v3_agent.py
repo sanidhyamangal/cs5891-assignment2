@@ -60,8 +60,8 @@ class TaxiAgent:
         if next_state:
             _action = self.select_action(next_state,
                                          self.get_epsilon(n_episode))
-            self.q[state][action] += self.alpha * self.gamma * self.getQValue(
-                next_state, _action)
+            self.q[state][action] += self.alpha * self.gamma * self.q[
+                next_state][_action]
 
     def off_policy_td_q_learning(self, state, action, reward, next_state):
         """
@@ -72,13 +72,7 @@ class TaxiAgent:
         _reward = self.alpha * reward
 
         # update q vals w.r.t. old q vals and reward
-        self.q[state][action] = (1 - self.alpha) * _old_q_vals + _reward
-
-        # check if next state exists for the given state and action
-        # if next state exists then add it's val too to q_val
-        if next_state:
-            self.q[state][action] += self.alpha * self.gamma * np.max(
-                self.q[next_state])
-
-    def getQValue(self, state, action):
-        return self.q[state][action]
+        self.q[state][action] = (
+            1 - self.alpha
+        ) * _old_q_vals + _reward + self.alpha * self.gamma * np.max(
+            self.q[next_state])
