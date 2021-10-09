@@ -49,17 +49,23 @@ class TaxiAgent:
         Implement On policy TD learning or SARSA
         YOUR CODE HERE
         """
-        _old_q_vals = self.q[state][action]
+        # compute all the previous rewards and old q val
+        _old_q_val = self.q[state][action]
         _reward = self.alpha * reward
 
-        # update q vals w.r.t. old q vals and reward
-        self.q[state][action] = (1 - self.alpha) * _old_q_vals + _reward
+        # update q vals w.r.t. old q vals and reward,
+        # Q(s,a) <- (1-alpha)*Q(s,a) + Reward
+        self.q[state][action] = (1 - self.alpha) * _old_q_val + _reward
 
         # check if next state exists for the given state and action
         # if next state exists then add it's val too to q_val
+        # updating the q val based on ε-greedy policy for next state
         if next_state:
+            # select the action for the next state using e-greedy policy
             _action = self.select_action(next_state,
                                          self.get_epsilon(n_episode))
+
+            # update the q based on the new updated policy
             self.q[state][action] += self.alpha * self.gamma * self.q[
                 next_state][_action]
 
@@ -68,11 +74,14 @@ class TaxiAgent:
         Implement Off policy TD learning ie SARSA-MAX/Q learning 
         YOUR CODE HERE
         """
-        _old_q_vals = self.q[state][action]
+
+        # compute all the previous rewards and old q val
+        _old_q_val = self.q[state][action]
         _reward = self.alpha * reward
 
         # update q vals w.r.t. old q vals and reward
+        # Q(s,a) <- Q(s,a) + alpha * (reward + gamma * argmax(Q(s_prime,a_prime)) - Q(s,a))
         self.q[state][action] = (
             1 - self.alpha
-        ) * _old_q_vals + _reward + self.alpha * self.gamma * np.max(
+        ) * _old_q_val + _reward + self.alpha * self.gamma * np.max(
             self.q[next_state])
