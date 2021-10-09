@@ -129,7 +129,7 @@ class GridworldAgent:
                     # increment the state counter
                     self.n_v[states[i]] +=1
                     # update the sum of rewards for the given state, i.e., 
-                    self.v[states[i]] = np.sum(rewards[i:]*_discounts[:-(i+1)])
+                    self.v[states[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
 
                 elif not first_visit:
                     """
@@ -140,7 +140,7 @@ class GridworldAgent:
                     # increment the state counter
                     self.n_v[states[i]] +=1
                     # update the sum of rewards for the given state
-                    self.v[states[i]] = np.sum(rewards[i:]*_discounts[:-(i+1)])
+                    self.v[states[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
         
 
         for state in self.env.state_space:
@@ -170,8 +170,8 @@ class GridworldAgent:
                     """
 
                     traversed[(states[i],actions[i])] = True
-                    self.n_q[states[i][actions[i]]] += 1
-                    self.q[states[i][actions[i]]] = np.sum(rewards[i:]*_discounts[:-(i+1)])
+                    self.n_q[states[i]][actions[i]] += 1
+                    self.q[states[i]][actions[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
 
 
 
@@ -183,8 +183,8 @@ class GridworldAgent:
                     YOUR CODE HERE
                     """
                     
-                    self.n_q[states[i][actions[i]]] += 1
-                    self.q[states[i][actions[i]]] = np.sum(rewards[i:]*_discounts[:-(i+1)])
+                    self.n_q[states[i]][actions[i]] += 1
+                    self.q[states[i]][actions[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
 
         for state in self.env.state_space:
             for action in range(self.n_action):
@@ -200,7 +200,8 @@ class GridworldAgent:
         Hint: You just need to do prediction then update the policy
         YOUR CODE HERE
         """
-        raise NotImplementedError
+        self.mc_predict_q(n_episode, first_visit)
+        self.update_policy_q()
 
     def mc_control_glie(self, n_episode=10000, first_visit=True, lr=0.):
         """
