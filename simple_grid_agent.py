@@ -209,4 +209,30 @@ class GridworldAgent:
         perform GLIE Monte Carlo control. Comment each line of code with what part of the pseudocode you are implementing in that line
         YOUR CODE HERE
         """
-        raise NotImplementedError
+        for t in range(n_episode):
+            traversed = {} # updating the traversed to hashmap just to ensure the lookup is O(1)
+            e = self.get_epsilon(t)
+            transitions = self.run_episode(self.env.start, e)
+            states, actions, rewards, next_states, dones = zip(*transitions)
+
+            # compute discount before hand to apply for computation for rewards,
+            # compute till one length extra so that if zero idx, it can take 1. 
+            _discounts = np.array([self.gamma**i for i in range(len(transitions)+1)])
+
+            for i in range(len(transitions)):
+                # updated the condition based on hashmap.
+                if first_visit and (not traversed.get((states[i],actions[i]))):
+
+                    traversed[(states[i],actions[i])] = True
+                    self.n_q[states[i]][actions[i]] += 1
+                    G = np.sum(rewards[i:]*_discounts[:-(i+1)])
+
+                    self.q[states[i]][actions[i]] += (G-self.q[states[i]][actions[i]]) / self.n_q[states[i]][actions[i]]
+
+                elif not first_visit:
+                    self.n_q[states[i]][actions[i]] += 1
+                    G = np.sum(rewards[i:]*_discounts[:-(i+1)])
+
+                    self.q[states[i]][actions[i]] += (G-self.q[states[i]][actions[i]]) / self.n_q[states[i]][actions[i]]
+
+        self.update_policy_q()
