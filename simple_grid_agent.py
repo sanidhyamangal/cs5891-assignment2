@@ -8,7 +8,7 @@ from simple_grid import simple_grid
 
 class GridworldAgent:
     def __init__(self,
-                 env:simple_grid,
+                 env: simple_grid,
                  policy,
                  gamma=0.9,
                  start_epsilon=0.9,
@@ -46,10 +46,10 @@ class GridworldAgent:
         understand how to calculate return.
         YOUR CODE HERE
         """
+        # return the sum of all the discounted rewards for each transition in the episode.
+        return np.sum(
+            [result[2] * self.gamma**i for i, result in enumerate(episode)])
 
-        return np.sum([result[2]*self.gamma**i for i,result in enumerate(episode)])
-
-    
     def get_q(self, start_state, first_action, epsilon=0.):
         episode = self.run_episode(start_state, epsilon, first_action)
         """
@@ -58,8 +58,9 @@ class GridworldAgent:
         understand how to calculate return.
         YOUR CODE HERE
         """
-
-        return np.sum([result[2]*self.gamma**i for i,result in enumerate(episode)])
+        # return the sum of all the discounted rewards for each transition in the episode.
+        return np.sum(
+            [result[2] * self.gamma**i for i, result in enumerate(episode)])
 
     def select_action(self, state, epsilon):
         best_action = self.policy[state]
@@ -108,14 +109,16 @@ class GridworldAgent:
 
     def mc_predict_v(self, n_episode=10000, first_visit=True):
         for t in range(n_episode):
-            traversed = {} # updated it to a a hashmap just to ensure that the lookup time is O(1)
+            traversed = {
+            }  # updated it to a a hashmap just to ensure that the lookup time is O(1)
             e = self.get_epsilon(t)
             transitions = self.run_episode(self.env.start, e)
             states, actions, rewards, next_states, dones = zip(*transitions)
 
-            # compute discount before hand to apply for computation for rewards,
-            # compute till one length extra so that if zero idx, it can take 1. 
-            _discounts = np.array([self.gamma**i for i in range(len(transitions)+1)])
+            # compute discount before hand to apply for computation for rewards, just to save the computation
+            # compute till one length extra so that if zero idx, it can take at least vals till last.
+            _discounts = np.array(
+                [self.gamma**i for i in range(len(transitions) + 1)])
 
             for i in range(len(transitions)):
                 if first_visit and (not traversed.get(states[i])):
@@ -127,9 +130,10 @@ class GridworldAgent:
                     # store the visit of the state in the traversed array
                     traversed[states[i]] = True
                     # increment the state counter
-                    self.n_v[states[i]] +=1
-                    # update the sum of rewards for the given state, i.e., 
-                    self.v[states[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
+                    self.n_v[states[i]] += 1
+                    # update the sum of rewards for the given state, i.e., V <- V + sum of all rewards*discounts
+                    self.v[states[i]] += np.sum(rewards[i:] *
+                                                _discounts[:-(i + 1)])
 
                 elif not first_visit:
                     """
@@ -138,10 +142,10 @@ class GridworldAgent:
                     YOUR CODE HERE
                     """
                     # increment the state counter
-                    self.n_v[states[i]] +=1
-                    # update the sum of rewards for the given state
-                    self.v[states[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
-        
+                    self.n_v[states[i]] += 1
+                    # update the sum of rewards for the given state, i.e., V <- V + sum of all rewards*discounts
+                    self.v[states[i]] += np.sum(rewards[i:] *
+                                                _discounts[:-(i + 1)])
 
         for state in self.env.state_space:
             if state != self.env.goal:
@@ -151,40 +155,47 @@ class GridworldAgent:
 
     def mc_predict_q(self, n_episode=10000, first_visit=True):
         for t in range(n_episode):
-            traversed = {} # updating the traversed to hashmap just to ensure the lookup is O(1)
+            traversed = {
+            }  # updating the traversed to hashmap just to ensure the lookup is O(1)
             e = self.get_epsilon(t)
             transitions = self.run_episode(self.env.start, e)
             states, actions, rewards, next_states, dones = zip(*transitions)
 
             # compute discount before hand to apply for computation for rewards,
-            # compute till one length extra so that if zero idx, it can take 1. 
-            _discounts = np.array([self.gamma**i for i in range(len(transitions)+1)])
+            # compute till one length extra so that if zero idx, it can take 1.
+            _discounts = np.array(
+                [self.gamma**i for i in range(len(transitions) + 1)])
 
             for i in range(len(transitions)):
                 # updated the condition based on hashmap.
-                if first_visit and (not traversed.get((states[i],actions[i]))):
+                if first_visit and (not traversed.get(
+                    (states[i], actions[i]))):
                     """
                     Implement first-visit Monte Carlo for state-action values(see Sutton and Barto Section 5.2)
                     Comment each line of code with what part of the pseudocode you are implementing in that line
                     YOUR CODE HERE
                     """
-
-                    traversed[(states[i],actions[i])] = True
+                    # store the visit of the state in the traversed array
+                    traversed[(states[i], actions[i])] = True
+                    # update the counter for the the q vals for just to be safe.
                     self.n_q[states[i]][actions[i]] += 1
-                    self.q[states[i]][actions[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
 
-
+                    # update Q(s,a) <- Sigma[Discounted Rewards]
+                    self.q[states[i]][actions[i]] += np.sum(
+                        rewards[i:] * _discounts[:-(i + 1)])
 
                 elif not first_visit:
-
                     """
                     Implement any-visit Monte Carlo for state-action values(see Sutton and Barto Section 5.2)
                     Comment each line of code with what part of the pseudocode you are implementing in that line
                     YOUR CODE HERE
                     """
-                    
+                    # update the counter for the the q vals for just to be safe.
                     self.n_q[states[i]][actions[i]] += 1
-                    self.q[states[i]][actions[i]] += np.sum(rewards[i:]*_discounts[:-(i+1)])
+
+                    # update Q(s,a) <- Sigma[Discounted Rewards]
+                    self.q[states[i]][actions[i]] += np.sum(
+                        rewards[i:] * _discounts[:-(i + 1)])
 
         for state in self.env.state_space:
             for action in range(self.n_action):
@@ -200,6 +211,7 @@ class GridworldAgent:
         Hint: You just need to do prediction then update the policy
         YOUR CODE HERE
         """
+        # for MC control Q, simply call predict q and then update policy
         self.mc_predict_q(n_episode, first_visit)
         self.update_policy_q()
 
@@ -209,30 +221,46 @@ class GridworldAgent:
         perform GLIE Monte Carlo control. Comment each line of code with what part of the pseudocode you are implementing in that line
         YOUR CODE HERE
         """
+
         for t in range(n_episode):
-            traversed = {} # updating the traversed to hashmap just to ensure the lookup is O(1)
+            traversed = {
+            }  # updating the traversed to hashmap just to ensure the lookup is O(1)
             e = self.get_epsilon(t)
             transitions = self.run_episode(self.env.start, e)
             states, actions, rewards, next_states, dones = zip(*transitions)
 
             # compute discount before hand to apply for computation for rewards,
-            # compute till one length extra so that if zero idx, it can take 1. 
-            _discounts = np.array([self.gamma**i for i in range(len(transitions)+1)])
+            # compute till one length extra so that if zero idx, it can take 1.
+            _discounts = np.array(
+                [self.gamma**i for i in range(len(transitions) + 1)])
 
             for i in range(len(transitions)):
                 # updated the condition based on hashmap.
-                if first_visit and (not traversed.get((states[i],actions[i]))):
+                if first_visit and (traversed.get((states[i], actions[i]))):
 
-                    traversed[(states[i],actions[i])] = True
-                    self.n_q[states[i]][actions[i]] += 1
-                    G = np.sum(rewards[i:]*_discounts[:-(i+1)])
+                    # if the state is already traversed then do nothing, continute for next step
+                    continue
 
-                    self.q[states[i]][actions[i]] += (G-self.q[states[i]][actions[i]]) / self.n_q[states[i]][actions[i]]
+                # store traversed state for first visit
+                traversed[(states[i], actions[i])] = True
 
-                elif not first_visit:
-                    self.n_q[states[i]][actions[i]] += 1
-                    G = np.sum(rewards[i:]*_discounts[:-(i+1)])
+                # count the number of times a state is visited
+                self.n_q[states[i]][actions[i]] += 1
 
-                    self.q[states[i]][actions[i]] += (G-self.q[states[i]][actions[i]]) / self.n_q[states[i]][actions[i]]
+                # calculated the discounted rewards i.e. G
+                G = np.sum(rewards[i:] * _discounts[:-(i + 1)])
 
+                # if Lr is zero then use the update rule, Q(S,A) <- (G-Q(S,A)) / N(S,A)
+                # more details about it could be found at this link, https://www.jeremyjordan.me/rl-learning-implementations/
+                if lr == 0:
+                    self.q[states[i]][actions[i]] += (G - self.q[states[i]][
+                        actions[i]]) / self.n_q[states[i]][actions[i]]
+
+                # if LR is provided
+                # Q(S,A) <- (G-Q(S,A))*alpha
+                else:
+                    self.q[states[i]][
+                        actions[i]] += (G - self.q[states[i]][actions[i]]) * lr
+
+        # call to the update policy function
         self.update_policy_q()
